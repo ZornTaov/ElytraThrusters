@@ -1,2 +1,1 @@
-FMLModType: GAMELIBRARY
-Automatic-Module-Name: spatial
+Automatic-Module-Name: elytrathrusters

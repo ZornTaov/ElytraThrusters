@@ -3,7 +3,7 @@ val modId: String = property("mod_id") as String
 plugins {
     id("idea")
     id("java")
-    id("net.neoforged.gradle.userdev") version "7.0.96"
+    id("net.neoforged.gradle.userdev") version "7.0.119"
 }
 
 base {
@@ -13,7 +13,7 @@ base {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    toolchain.languageVersion.set(JavaLanguageVersion.of(21))
 }
 
 repositories {
@@ -46,7 +46,7 @@ runs {
 
         if(!System.getenv().containsKey("CI")) {
             // JetBrains Runtime Hotswap
-            jvmArgument("-XX:+AllowEnhancedClassRedefinition")
+            //jvmArgument("-XX:+AllowEnhancedClassRedefinition")
         }
 
         modSource(sourceSets.main.get())

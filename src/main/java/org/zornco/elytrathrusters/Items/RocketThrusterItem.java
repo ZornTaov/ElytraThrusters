@@ -2,6 +2,7 @@ package org.zornco.elytrathrusters.Items;
 
 import net.minecraft.ChatFormatting;
 import net.minecraft.core.Direction;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.nbt.CompoundTag;
 import net.minecraft.network.chat.CommonComponents;
 import net.minecraft.network.chat.Component;
@@ -13,21 +14,20 @@ import net.minecraft.world.InteractionHand;
 import net.minecraft.world.InteractionResult;
 import net.minecraft.world.InteractionResultHolder;
 import net.minecraft.world.entity.player.Player;
-import net.minecraft.world.entity.projectile.FireworkRocketEntity;
 import net.minecraft.world.item.*;
+import net.minecraft.world.item.component.Fireworks;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.neoforge.capabilities.Capabilities;
 import net.neoforged.neoforge.energy.EnergyStorage;
 import net.neoforged.neoforge.energy.IEnergyStorage;
+import net.neoforged.neoforge.event.EventHooks;
 import org.jetbrains.annotations.NotNull;
-import org.zornco.elytrathrusters.DataAttachments;
 
 import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 public class RocketThrusterItem extends Item {
     private final int energyCapacity;
@@ -42,103 +42,95 @@ public class RocketThrusterItem extends Item {
         this.creative = creative;
         this.energyCapacity = energyCapacity;
     }
-
-    public @NotNull InteractionResult useOn(UseOnContext context) {
-        Level level = context.getLevel();
-        ItemStack itemstack = context.getItemInHand();
-        if (!level.isClientSide) {
-            EnergyStorage data = itemstack.getData(DataAttachments.ITEM_ENERGY_ATTACHMENT);
-            if (data.getEnergyStored() < 500) return InteractionResult.PASS;
-
-            Vec3 vec3 = context.getClickLocation();
-            Direction direction = context.getClickedFace();
-            FireworkRocketEntity fireworkrocketentity = new FireworkRocketEntity(level, context.getPlayer(), vec3.x + (double)direction.getStepX() * 0.15, vec3.y + (double)direction.getStepY() * 0.15, vec3.z + (double)direction.getStepZ() * 0.15, itemstack);
-            level.addFreshEntity(fireworkrocketentity);
-            if (!Objects.requireNonNull(context.getPlayer()).getAbilities().instabuild) {
-                data.extractEnergy(500, false);
-                itemstack.setData(DataAttachments.ITEM_ENERGY_ATTACHMENT, data);
-            }
-        }
-
-        return InteractionResult.sidedSuccess(level.isClientSide);
-    }
-
-    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, Player player, @NotNull InteractionHand hand) {
-        if (player.isFallFlying()) {
-            ItemStack itemstack = player.getItemInHand(hand);
-            if (!level.isClientSide) {
-                EnergyStorage data = itemstack.getData(DataAttachments.ITEM_ENERGY_ATTACHMENT);
-
-                if (data.getEnergyStored() < 500) return InteractionResultHolder.pass(player.getItemInHand(hand));
-
-                FireworkRocketEntity fireworkrocketentity = new FireworkRocketEntity(level, itemstack, player);
-                level.addFreshEntity(fireworkrocketentity);
-                if (!player.getAbilities().instabuild) {
-                    //itemstack.shrink(1);
-                    data.extractEnergy(500, false);
-                    itemstack.setData(DataAttachments.ITEM_ENERGY_ATTACHMENT, data);
-                }
-
-                player.awardStat(Stats.ITEM_USED.get(this));
-            }
-            return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide());
-        } else {
-            return InteractionResultHolder.pass(player.getItemInHand(hand));
-        }
-    }
-
-    public void appendHoverText(ItemStack stack, @Nullable Level level, @NotNull List<Component> tooltip, @NotNull TooltipFlag tooltipFlag) {
-        CompoundTag compoundtag = stack.getTagElement("Fireworks");
-        if (compoundtag != null) {
-            if (compoundtag.contains("Flight", 99)) {
-                tooltip.add(Component.translatable("item.minecraft.firework_rocket.flight").append(CommonComponents.SPACE).append(String.valueOf(compoundtag.getByte("Flight"))).withStyle(ChatFormatting.GRAY));
-            }
-        }
-
-        if (!creative) {
-            final IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
-            if (energy == null) {
-                return;
-            }
-            tooltip.add(Component.translatable("misc.refinedstorage.energy_stored", energy.getEnergyStored(), energy.getMaxEnergyStored()).setStyle(GRAY));
-        }
-    }
-
-    public static void setDuration(ItemStack p_260106_, byte p_260332_) {
-        p_260106_.getOrCreateTagElement("Fireworks").putByte("Flight", p_260332_);
-    }
-
-    public int getEnergyCapacity() {
-        return energyCapacity;
-    }
-
-    public @NotNull ItemStack getDefaultInstance() {
-        ItemStack itemstack = new ItemStack(this);
-        setDuration(itemstack, (byte)1);
-        return itemstack;
-    }
-
+    /**
+     * How long it takes to use or consume an item
+     */
     @Override
-    public boolean isBarVisible(@NotNull ItemStack stack) {
-        return !creative;
+    public int getUseDuration(ItemStack pStack) {
+        return 72000;
+    }
+    /**
+     * Returns the action that specifies what animation to play when the item is being used.
+     */
+    @Override
+    public UseAnim getUseAnimation(ItemStack pStack) {
+        return UseAnim.BOW;
     }
 
-    @Override
-    public int getBarWidth(ItemStack stack) {
-        IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
-        if (energy == null) {
-            return 0;
+    public InteractionResultHolder<ItemStack> use(Level pLevel, Player pPlayer, InteractionHand pHand) {
+        ItemStack itemstack = pPlayer.getItemInHand(pHand);
+        if (pPlayer.isFallFlying()) {
+            pPlayer.startUsingItem(pHand);
+            return InteractionResultHolder.consume(itemstack);
         }
-        float stored = (float) energy.getEnergyStored() / (float) energy.getMaxEnergyStored();
-        return Math.round(stored * 13F);
+        return InteractionResultHolder.fail(itemstack);
     }
 
-    @Override
-    public int getBarColor(ItemStack stack) {
-        IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
-        if (energy == null) {
-            return super.getBarColor(stack);
+//    public @NotNull InteractionResultHolder<ItemStack> use(@NotNull Level level, Player player, @NotNull InteractionHand hand) {
+//        if (player.isFallFlying()) {
+//            ItemStack itemstack = player.getItemInHand(hand);
+//            if (!level.isClientSide) {
+//                //EnergyStorage data = itemstack.getData(DataAttachments.ITEM_ENERGY_ATTACHMENT);
+//
+//                //if (data.getEnergyStored() < 500) return InteractionResultHolder.pass(player.getItemInHand(hand));
+//
+//                //FireworkRocketEntity fireworkrocketentity = new FireworkRocketEntity(level, itemstack, player);
+//                //level.addFreshEntity(fireworkrocketentity);
+//                if (!player.getAbilities().instabuild) {
+//                    //itemstack.shrink(1);
+//                    //data.extractEnergy(500, false);
+//                    //itemstack.setData(DataAttachments.ITEM_ENERGY_ATTACHMENT, data);
+//                }
+//
+//                player.awardStat(Stats.ITEM_USED.get(this));
+//            }
+//            return InteractionResultHolder.sidedSuccess(player.getItemInHand(hand), level.isClientSide());
+//        } else {
+//            return InteractionResultHolder.pass(player.getItemInHand(hand));
+//        }
+//    }
+
+    public void appendHoverText(ItemStack stack, Item.TooltipContext pContext, @NotNull List<Component> tooltip, @NotNull TooltipFlag tooltipFlag) {
+        Fireworks fireworks = (Fireworks)stack.get(DataComponents.FIREWORKS);
+        if (fireworks != null) {
+            Objects.requireNonNull(tooltip);
+            fireworks.addToTooltip(pContext, tooltip::add, tooltipFlag);
         }
-        return Mth.hsvToRgb(Math.max(0.0F, (float) energy.getEnergyStored() / (float) energy.getMaxEnergyStored()) / 3.0F, 1.0F, 1.0F);
+
+//        if (!creative) {
+//            final IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+//            if (energy == null) {
+//                return;
+//            }
+//            tooltip.add(Component.translatable("misc.refinedstorage.energy_stored", energy.getEnergyStored(), energy.getMaxEnergyStored()).setStyle(GRAY));
+//        }
     }
+
+//    public int getEnergyCapacity() {
+//        return energyCapacity;
+//    }
+//
+//    @Override
+//    public boolean isBarVisible(@NotNull ItemStack stack) {
+//        return !creative;
+//    }
+//
+//    @Override
+//    public int getBarWidth(ItemStack stack) {
+//        IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+//        if (energy == null) {
+//            return 0;
+//        }
+//        float stored = (float) energy.getEnergyStored() / (float) energy.getMaxEnergyStored();
+//        return Math.round(stored * 13F);
+//    }
+//
+//    @Override
+//    public int getBarColor(ItemStack stack) {
+//        IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+//        if (energy == null) {
+//            return super.getBarColor(stack);
+//        }
+//        return Mth.hsvToRgb(Math.max(0.0F, (float) energy.getEnergyStored() / (float) energy.getMaxEnergyStored()) / 3.0F, 1.0F, 1.0F);
+//    }
 }
