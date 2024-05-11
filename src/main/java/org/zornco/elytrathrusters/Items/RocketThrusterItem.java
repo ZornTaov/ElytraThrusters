@@ -90,47 +90,47 @@ public class RocketThrusterItem extends Item {
 //        }
 //    }
 
-    public void appendHoverText(ItemStack stack, Item.TooltipContext pContext, @NotNull List<Component> tooltip, @NotNull TooltipFlag tooltipFlag) {
-        Fireworks fireworks = (Fireworks)stack.get(DataComponents.FIREWORKS);
+    public void appendHoverText(ItemStack stack, @NotNull Item.TooltipContext pContext, @NotNull List<Component> tooltip, @NotNull TooltipFlag tooltipFlag) {
+        Fireworks fireworks = stack.get(DataComponents.FIREWORKS);
         if (fireworks != null) {
             Objects.requireNonNull(tooltip);
             fireworks.addToTooltip(pContext, tooltip::add, tooltipFlag);
         }
 
-//        if (!creative) {
-//            final IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
-//            if (energy == null) {
-//                return;
-//            }
-//            tooltip.add(Component.translatable("misc.refinedstorage.energy_stored", energy.getEnergyStored(), energy.getMaxEnergyStored()).setStyle(GRAY));
-//        }
+        if (!creative) {
+            final IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+            if (energy == null) {
+                return;
+            }
+            tooltip.add(Component.translatable("misc.elytrathrusters.energy_stored", energy.getEnergyStored(), energy.getMaxEnergyStored()).setStyle(GRAY));
+        }
     }
 
-//    public int getEnergyCapacity() {
-//        return energyCapacity;
-//    }
-//
-//    @Override
-//    public boolean isBarVisible(@NotNull ItemStack stack) {
-//        return !creative;
-//    }
-//
-//    @Override
-//    public int getBarWidth(ItemStack stack) {
-//        IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
-//        if (energy == null) {
-//            return 0;
-//        }
-//        float stored = (float) energy.getEnergyStored() / (float) energy.getMaxEnergyStored();
-//        return Math.round(stored * 13F);
-//    }
-//
-//    @Override
-//    public int getBarColor(ItemStack stack) {
-//        IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
-//        if (energy == null) {
-//            return super.getBarColor(stack);
-//        }
-//        return Mth.hsvToRgb(Math.max(0.0F, (float) energy.getEnergyStored() / (float) energy.getMaxEnergyStored()) / 3.0F, 1.0F, 1.0F);
-//    }
+    public int getEnergyCapacity() {
+        return energyCapacity;
+    }
+
+    @Override
+    public boolean isBarVisible(@NotNull ItemStack stack) {
+        return !creative;
+    }
+
+    @Override
+    public int getBarWidth(ItemStack stack) {
+        IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+        if (energy == null) {
+            return 0;
+        }
+        float stored = (float) energy.getEnergyStored() / (float) energy.getMaxEnergyStored();
+        return Math.round(stored * 13F);
+    }
+
+    @Override
+    public int getBarColor(ItemStack stack) {
+        IEnergyStorage energy = stack.getCapability(Capabilities.EnergyStorage.ITEM);
+        if (energy == null) {
+            return super.getBarColor(stack);
+        }
+        return Mth.hsvToRgb(Math.max(0.0F, (float) energy.getEnergyStored() / (float) energy.getMaxEnergyStored()) / 3.0F, 1.0F, 1.0F);
+    }
 }
