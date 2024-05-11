@@ -19,7 +19,7 @@ public interface Registries {
     DeferredRegister.Items ITEMS = DeferredRegister.createItems(MOD_ID);
     DeferredRegister<AttachmentType<?>> ATTACHMENT_TYPES = DeferredRegister.create(NeoForgeRegistries.ATTACHMENT_TYPES, MOD_ID);
 
-    public static final DeferredItem<RocketThrusterItem> PERSONAL_THRUSTER = Registries.ITEMS.register("personal_thruster",
+    DeferredItem<RocketThrusterItem> ROCKET_THRUSTER = Registries.ITEMS.register("personal_thruster",
         () -> new RocketThrusterItem(new Item.Properties().stacksTo(1), false, 64_000));
 
     DeferredRegister<CreativeModeTab> TABS = DeferredRegister.create(BuiltInRegistries.CREATIVE_MODE_TAB, MOD_ID);
@@ -34,7 +34,12 @@ public interface Registries {
 
         modBus.addListener((BuildCreativeModeTabContentsEvent addToTabs) -> {
             if(addToTabs.getTabKey() == CreativeModeTabs.TOOLS_AND_UTILITIES) {
-                addToTabs.accept(PERSONAL_THRUSTER.get());
+                RocketThrusterItem thrusterItem = ROCKET_THRUSTER.get();
+                addToTabs.accept(thrusterItem);
+
+                ItemStack stack = new ItemStack(thrusterItem);
+                stack.set(STORED_ENERGY, 40000);
+                addToTabs.accept(stack);
             }
         });
     }
