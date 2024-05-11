@@ -12,7 +12,7 @@ public class ModEventHandlers {
     public static void onRegisterCapabilities(final RegisterCapabilitiesEvent e) {
         e.registerItem(
             Capabilities.EnergyStorage.ITEM,
-            (stack, ctx) -> new ItemEnergyStorage(Registries.STORED_ENERGY, stack, 40000),
+            (stack, ctx) -> new ItemEnergyStorage(Registries.STORED_ENERGY, stack, 64_000),
             Registries.ROCKET_THRUSTER.get()
         );
     }
