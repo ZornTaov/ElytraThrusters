@@ -6,7 +6,7 @@ dependencyResolutionManagement {
                 .versionRef("neoforge")
 
         version("minecraft", "1.20.6")
-        version("neoforge", "20.6.18-beta")
+        version("neoforge", "20.6.57-beta")
     }
 }
 
